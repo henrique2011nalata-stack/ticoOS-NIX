@@ -75,6 +75,7 @@
           inputs.nixvim.homeManagerModules.nixvim
         ];
 
+        home-manager.backupFileExtension = "backup"; 
         home-manager.users.tico = { pkgs, ... }: {
           home.stateVersion = "24.11";
 
