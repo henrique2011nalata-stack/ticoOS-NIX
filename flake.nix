@@ -26,10 +26,7 @@
 
 # --- CONFIGURAÇÕES DO SISTEMA (DESEMPENHO MÁXIMO & ÁUDIO) ---
           ({ ... }: {
-           programs.hyprland = {
-             enable = true;
-             withUWSM = true;
-           };
+            programs.hyprland.enable = true;
            environment.pathsToLink = [ "/share/applications" "/share/xdg-desktop-portal" ];
            fonts.fontDir.enable = true;
 
