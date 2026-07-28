@@ -16,6 +16,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelParams = [ "nvidia_drm.modeset=1" ];
+  boot.initrd.kernelModules = [ "nvidia" "nvidia_drm" ];
   #config
 
   networking.hostName = "ticoOS"; # Define your hostname.
@@ -44,6 +46,12 @@
     open = false;
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  environment.sessionVariables = {
+    GBM_BACKEND = "nvidia-drm";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    WLR_NO_HARDWARE_CURSORS = "1";
   };
 
   # Select internationalisation properties.
