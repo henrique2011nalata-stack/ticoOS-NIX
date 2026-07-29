@@ -268,6 +268,13 @@ color: #ffffff;
               "$mainMod" = "SUPER";
               "$terminal" = "kitty";
 
+              env = [
+                "LIBVA_DRIVER_NAME,nvidia"
+                "GBM_BACKEND,nvidia-drm"
+                "__GLX_VENDOR_LIBRARY_NAME,nvidia"
+                "WLR_NO_HARDWARE_CURSORS,1"
+              ];
+
               monitor = ",preferred,auto,1";
 
               input = {

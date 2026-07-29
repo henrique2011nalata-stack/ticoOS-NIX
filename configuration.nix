@@ -16,7 +16,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "nvidia_drm.modeset=1" ];
+  boot.kernelParams = [ "nvidia_drm.modeset=1" "nvidia_drm.fbdev=1" ];
   boot.initrd.kernelModules = [ "nvidia" "nvidia_drm" ];
   #config
 
@@ -29,6 +29,8 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  services.displayManager.defaultSession = "hyprland";
 
   # Set your time zone.
   time.timeZone = "America/Sao_Paulo";
