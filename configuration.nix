@@ -1,121 +1,100 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+{ config, lib, pkgs, ... }:
 
-{ config, pkgs, ... }:
-
+let
+  cfg = config.ticoOS;
+in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
-  #ferramentas  
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "nvidia_drm.modeset=1" "nvidia_drm.fbdev=1" ];
-  boot.initrd.kernelModules = [ "nvidia" "nvidia_drm" ];
-  #config
-
-  networking.hostName = "ticoOS"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-
-  services.displayManager.defaultSession = "hyprland";
-
-  # Set your time zone.
-  time.timeZone = "America/Sao_Paulo";
-
-  services.xserver.videoDrivers = [ "nvidia" ];
-
-  hardware.graphics = {
-  	enable = true;
-	enable32Bit = true;
+  options.ticoOS = {
+    enableNvidia = lib.mkEnableOption "NVIDIA GPU support";
+    isVm = lib.mkEnableOption "virtual machine mode";
   };
 
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = false;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
+  config = lib.mkMerge [
+    {
+      ticoOS.enableNvidia = lib.mkDefault true;
+      ticoOS.isVm = lib.mkDefault false;
+    }
 
-  environment.sessionVariables = {
-    GBM_BACKEND = "nvidia-drm";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-    WLR_NO_HARDWARE_CURSORS = "1";
-  };
+    (lib.mkIf (!cfg.isVm) {
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
+    })
 
-  # Select internationalisation properties.
-  i18n.defaultLocale = "pt_BR.UTF-8";
+    (lib.mkIf cfg.isVm {
+      boot.loader.grub.enable = false;
+      boot.initrd.systemd.enable = true;
+      fileSystems."/" = {
+        device = "/dev/vda";
+        fsType = "ext4";
+      };
+    })
 
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
-  };
+    {
+      nix.settings.experimental-features = [ "nix-command" "flakes" ];
+      boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "br";
-    variant = "";
-  };
+      networking.hostName = "ticoOS";
+      networking.networkmanager.enable = true;
 
-  # Configure console keymap
-  console.keyMap = "br-abnt2";
+      services.displayManager.defaultSession = "hyprland";
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users."tico" = {
-    isNormalUser = true;
-    description = "tico";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [];
-  };
+      time.timeZone = "America/Sao_Paulo";
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
+      hardware.graphics = {
+        enable = true;
+        enable32Bit = true;
+      };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+      i18n.defaultLocale = "pt_BR.UTF-8";
 
-  # List services that you want to enable:
+      i18n.extraLocaleSettings = {
+        LC_ADDRESS = "pt_BR.UTF-8";
+        LC_IDENTIFICATION = "pt_BR.UTF-8";
+        LC_MEASUREMENT = "pt_BR.UTF-8";
+        LC_MONETARY = "pt_BR.UTF-8";
+        LC_NAME = "pt_BR.UTF-8";
+        LC_NUMERIC = "pt_BR.UTF-8";
+        LC_PAPER = "pt_BR.UTF-8";
+        LC_TELEPHONE = "pt_BR.UTF-8";
+        LC_TIME = "pt_BR.UTF-8";
+      };
 
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+      services.xserver.xkb = {
+        layout = "br";
+        variant = "";
+      };
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+      console.keyMap = "br-abnt2";
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "26.05"; # Did you read the comment?
+      users.users."tico" = {
+        isNormalUser = true;
+        description = "tico";
+        extraGroups = [ "networkmanager" "wheel" ];
+        packages = with pkgs; [];
+      };
 
+      nixpkgs.config.allowUnfree = true;
+      system.stateVersion = "26.05";
+    }
+
+    (lib.mkIf cfg.enableNvidia {
+      boot.kernelParams = [ "nvidia_drm.modeset=1" "nvidia_drm.fbdev=1" ];
+      boot.initrd.kernelModules = [ "nvidia" "nvidia_drm" ];
+      services.xserver.videoDrivers = [ "nvidia" ];
+
+      hardware.nvidia = {
+        modesetting.enable = true;
+        powerManagement.enable = false;
+        open = false;
+        nvidiaSettings = true;
+        package = config.boot.kernelPackages.nvidiaPackages.stable;
+      };
+
+      environment.sessionVariables = {
+        GBM_BACKEND = "nvidia-drm";
+        __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+        WLR_NO_HARDWARE_CURSORS = "1";
+      };
+    })
+  ];
 }
